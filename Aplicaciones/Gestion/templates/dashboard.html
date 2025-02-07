@@ -1,0 +1,470 @@
+{% extends "template.html" %}
+{% block content %}
+<br>
+<h1 class="text-center no-print">DASHBOARD</h1>
+<br>
+<center>
+    <button class="btn btn-primary no-print" onclick="window.print()">
+        IMPRIMIR
+    </button>
+</center>
+<div class="row">
+    <div class="col-md-4">
+        
+        <!-- PARA CAMBIAR DINAMICAMENTE DE TIPO DE GRÁFICO -->
+        <!-- <button onclick="changeChartType('bar')">Cambiar a Barras</button>
+        <button onclick="changeChartType('line')">Cambiar a Línea</button> -->
+        <h3 class="text-center">Tipos de Socios </h3>
+        <canvas id="tipo_socio"  height="10">
+
+        </canvas>
+    </div>
+    <div class="col-md-4">
+        <h3 class="text-center"> # Medidores por Ruta</h3>
+        <canvas id="medidores_ruta"  width="100" height="100">
+
+        </canvas>
+    </div>
+    <div class="col-md-4">
+        <h3 class="text-center"> Estado de los medidores de la Junta</h3>
+        <canvas id="medidores_estado"  width="100" height="100">
+
+        </canvas>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <h3 class="text-center"> Lecturas por año</h3>
+        <canvas id="lecturas_anio"  width="100" height="100">
+
+        </canvas>
+    </div>
+    <div class="col-md-4">
+        <h3 class="text-center"> Lecturas más altas ENERO 2024</h3>
+        <canvas id="lecturas_mas_altas_enero_2024"  width="100" height="100">
+
+        </canvas>
+    </div>
+    <div class="col-md-4">
+        <h3 class="text-center"> # de medidores por Tarifa</h3>
+        <canvas id="socios_con_pagos"  width="100" height="100">
+
+        </canvas>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <h3 class="text-center"> Rutas con menos medidores</h3>
+        <canvas id="rutas_medidores"  width="100" height="100">
+
+        </canvas>
+    </div>
+    <div class="col-md-4">
+        <h3 class="text-center"> Socios con más medidores</h3>
+        <canvas id="socios_mas_medidores"  width="100" height="100">
+
+        </canvas>
+    </div>
+    <div class="col-md-4">       
+        <h3 class="text-center"> Socios Inactivos</h3> 
+        <canvas id="socios_inactivos"  width="100" height="100">
+
+        </canvas>
+    </div>
+</div>
+
+<!--DASHBOARD 1) TIPOS DE SOCIO-->
+
+
+<script>
+    var ctx = document.getElementById('tipo_socio').getContext('2d');
+   
+    // Preparar los datos para Chart.js
+    var tipos = [];
+    var cantidades = [];
+ 
+    {% for socio in socios_tipo %}
+        tipos.push("{{ socio.tipo_soc }}");
+        cantidades.push({{ socio.count }});
+    {% endfor %}
+
+
+    var myChart = new Chart(ctx, {
+        type: 'pie', // Tipo de gráfico de barras (pie,line,bar,radar)
+        data: {
+            labels: tipos, // Etiquetas del eje X (ACTIVO / INACTIVO)
+            datasets: [{
+                label: 'Cantidad de Socios',
+                data: cantidades, // Datos de la cantidad de proveedores
+                backgroundColor: ['#96ac60','#FF6565'], // Asignar los colores
+                borderColor: ['green','red'], // Colores del borde de las barras
+                borderWidth: 1
+            }],
+            
+
+        },
+        options: {
+            responsive: true,                        
+        }
+        
+    });
+
+    //CAMBIAR DE GRAFICO DINAMICAMENTE
+    // function changeChartType(type) {
+    // myChart.config.type = type;
+    // myChart.update();
+    // }
+</script>
+
+<!--DASHBOARD 2) MEDIDORES POR RUTA-->
+
+<script>
+    var ctx = document.getElementById('medidores_ruta').getContext('2d');
+
+    // Preparar los datos para Chart.js
+    var rutas = [];
+    var cantidades = [];
+
+    {% for medidor in medidores %}
+        rutas.push("{{ medidor.fk_id_rut__nombre_rut}}");
+        cantidades.push({{ medidor.count }});
+    {% endfor %}
+
+    var myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: rutas,
+        datasets: [{
+            
+            data: cantidades,
+            backgroundColor: ['#96ac60', '#f59e0b', '#3b82f6', '#ef4444', '#a855f7'],
+            borderColor: ['#6b8c42', '#d97706', '#2563eb', '#dc2626', '#9333ea'],
+            borderWidth: 1
+        }]
+    },
+    options: {
+    responsive: true,
+    plugins: {
+        legend:{
+            display: false
+        }
+    },
+    scales: {
+        x: { title: { display: true, text: 'Rutas' } },
+        y: { title: { display: true, text: 'Cantidad de Medidores' } }
+    }
+}
+
+});
+    
+</script>
+
+<!--INDICADOR 3: MEDIDORES ACTIVOS E INACTIVOS DE LA JUNTA -->
+<script>
+    var ctx = document.getElementById('medidores_estado').getContext('2d');
+
+    // Preparar los datos para Chart.js
+    var estados = [];
+    var cantidades = [];
+
+    {% for medidor in medidores_estado %}
+        estados.push("{{ medidor.estado_med}}");
+        cantidades.push({{ medidor.count }});
+    {% endfor %}
+
+    var myChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: estados,
+        datasets: [{
+            
+            data: cantidades,
+            backgroundColor: ['#3b82f6', '#ef4444'],
+            borderColor: ['#3b82f6', '#ef4444'],
+            borderWidth: 1
+        }]
+    },
+    options: {
+    responsive: true,
+    plugins: {
+        legend:{
+            display: true
+        }
+    },
+    
+}
+
+});
+</script>
+
+<!--4)  LECTURAS POR AÑO-->
+<script>
+    var ctx = document.getElementById('lecturas_anio').getContext('2d');
+
+    // Preparar los datos para Chart.js
+    var años = [];
+    var cantidades = [];
+
+    {% for lectura in lecturas_anio %}
+        años.push("{{ lectura.anio_lec}}");
+        cantidades.push({{ lectura.count }});
+    {% endfor %}
+
+    var myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: años,
+        datasets: [{
+            
+            data: cantidades,
+            backgroundColor: ['#96ac60', '#f59e0b', '#3b82f6', '#ef4444', '#a855f7'],
+            borderColor: ['#6b8c42', '#d97706', '#2563eb', '#dc2626', '#9333ea'],
+            borderWidth: 1
+        }]
+    },
+    options: {
+    responsive: true,
+    plugins: {
+        legend:{
+            display: false
+        }
+    },
+    scales: {
+        x: { title: { display: true, text: 'Año' } },
+        y: { title: { display: true, text: 'Número de Lecturas Realizadas' } }
+    }
+}
+
+});
+    
+</script>
+
+<!--5)  LECTURAS MÁS ALTAS ENERO 2024-->
+<script>
+    var ctx = document.getElementById('lecturas_mas_altas_enero_2024').getContext('2d');
+    var socio = [];
+    var cantidades = [];
+
+    {% for lectura in lecturas_mas_altas_enero_2024 %}
+        socio.push("{{ lectura.fk_id_his.fk_id_soc.nombres_soc|escapejs }} {{ lectura.fk_id_his.fk_id_soc.primer_apellido_soc|escapejs }}");
+        cantidades.push({{ lectura.lectura_actual_lec }});
+    {% endfor %}
+
+    // Verifica los datos en la consola del navegador
+    console.log('Socios:', socio);
+    console.log('Cantidades:', cantidades);
+
+    var myChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: socio,
+            datasets: [{            
+                data: cantidades,
+                backgroundColor: ['#96ac60', '#f59e0b', '#3b82f6' ],
+                borderColor: ['#6b8c42', '#d97706', '#2563eb' ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true }
+            }
+        }
+    });
+</script>
+
+
+
+<script>
+    var ctx = document.getElementById('socios_con_pagos').getContext('2d');
+
+    // Preparar los datos para Chart.js
+    var tarifas = [];
+    var cantidad = [];
+
+    {% for tarifa in medidores_tarifas %}
+        tarifas.push("{{ tarifa.fk_id_tar__nombre_tar}}");  // id_tarifa
+        cantidad.push({{ tarifa.count }});  // total de medidores por tarifa
+    {% endfor %}
+
+    // Crear el gráfico
+    var myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: tarifas,  // Las etiquetas serán los IDs de los socios
+            datasets: [{
+                label: 'Medidores',
+                data: cantidad,  // Los datos serán los totales pagados
+                backgroundColor: ['#451B50', '#77D28C', '#9CC145'], // Color de las barras
+                borderColor: ['#451B50', '#77D28C', '#9CC145'],  // Color del borde de las barras
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Tarifa'  // Título del eje X
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: '# Medidores'  // Título del eje Y
+                    },
+                    beginAtZero: true  // Aseguramos que el eje Y comience desde 0
+                }
+            }
+        }
+    });
+</script>
+
+<script>
+    var ctx = document.getElementById('rutas_medidores').getContext('2d');
+
+    // Preparar los datos para Chart.js
+    var rutas = [];
+    var cantidad = [];
+
+    {% for medidor in rutas_medidores %}
+        rutas.push("{{ medidor.fk_id_rut__nombre_rut }}");  // Nombre de la ruta
+        cantidad.push({{ medidor.count }});  // Total de medidores por ruta
+    {% endfor %}
+
+    // Crear el gráfico
+    var myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: rutas,  // Las etiquetas serán los nombres de las rutas
+            datasets: [{
+                label: 'Medidores',
+                data: cantidad,  // Los datos serán los totales pagados
+                backgroundColor: ['#451B50', '#77D28C', '#9CC145'], // Color de las barras
+                borderColor: ['#451B50', '#77D28C', '#9CC145'],  // Color del borde de las barras
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Ruta'  // Título del eje X
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: '# Medidores'  // Título del eje Y
+                    },
+                    beginAtZero: true  // Aseguramos que el eje Y comience desde 0
+                }
+            }
+        }
+    });
+</script>
+
+<script>
+    var ctx = document.getElementById('socios_mas_medidores').getContext('2d');
+
+    // Preparar los datos para Chart.js
+    var socios = [];
+    var cantidad = [];
+
+    {% for socio in socios_mas_medidores %}
+        socios.push("{{ socio.fk_id_soc__nombres_soc }} {{ socio.fk_id_soc__primer_apellido_soc }}");  
+        cantidad.push({{ socio.total_medidores }});  
+    {% endfor %}
+
+    // Crear el gráfico
+    var myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: socios,  // Las etiquetas serán los nombres de las rutas
+            datasets: [{
+                label: 'Medidores',
+                data: cantidad,  // Los datos serán los totales pagados
+                backgroundColor: ['#451B50', '#77D28C', '#9CC145'], // Color de las barras
+                borderColor: ['#451B50', '#77D28C', '#9CC145'],  // Color del borde de las barras
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Socios'  // Título del eje X
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: '# Medidores'  // Título del eje Y
+                    },
+                    beginAtZero: true  // Aseguramos que el eje Y comience desde 0
+                }
+            }
+        }
+    });
+</script>
+
+<script>
+    var ctx = document.getElementById('socios_inactivos').getContext('2d');
+
+    // Preparar los datos para Chart.js
+    var socios = [];
+    var cantidad = [];
+
+    {% for socio in socios_inactivos %}
+        socios.push("{{ socio.nombres_soc }} {{ socio.primer_apellido_soc }}");          
+        cantidad.push(1);
+    {% endfor %}
+
+    // Crear el gráfico
+    var myChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: socios,  // Las etiquetas serán los nombres de las rutas
+            datasets: [{
+                label: 'Socios',
+                data: cantidad,  // Los datos serán los totales pagados
+                backgroundColor: ['#451B50', '#77D28C', '#9CC145'], // Color de las barras
+                borderColor: ['#451B50', '#77D28C', '#9CC145'],  // Color del borde de las barras
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true
+                }
+            },
+            
+        }
+    });
+</script>
+
+
+{% endblock %}
