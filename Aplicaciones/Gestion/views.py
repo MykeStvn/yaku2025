@@ -4,7 +4,7 @@ from django.db.models import Sum
 from django.db.models.functions import ExtractYear
 
 
-from Aplicaciones.Gestion.models import Detalle, HistorialPropietario, Lectura, Medidor, Recaudacion, Socio
+from Aplicaciones.Gestion.models import Comunicado, Detalle, HistorialPropietario, Lectura, Medidor, Recaudacion, Socio
 
 # Create your views here.
 def dashboard(request):
@@ -53,6 +53,14 @@ def dashboard(request):
     socios_inactivos = Socio.objects.filter(estado_soc='INACTIVO')
     for socio in socios_inactivos:
         print(f"Socio: {socio.nombres_soc}")
+
+    #10) COMUNICADOS POR AÑO
+    comunicados_por_anio = Comunicado.objects.annotate(
+    year=ExtractYear('fecha_com')
+    ).values('year').annotate(total=Count('id_com')).order_by('year')
+    
+    for comunicado in comunicados_por_anio:
+        print(f"Año: {comunicado['year']}, Total: {comunicado['total']}")
     
     context = {
         'socios_tipo':socios_tipo,
@@ -63,7 +71,8 @@ def dashboard(request):
         'medidores_tarifas':medidores_tarifas,
         'rutas_medidores':rutas_medidores,
         'socios_mas_medidores': socios_mas_medidores,
-        'socios_inactivos': socios_inactivos        
+        'socios_inactivos': socios_inactivos,
+        'comunicados_por_anio': comunicados_por_anio
     }
     
     
